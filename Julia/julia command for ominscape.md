@@ -16,7 +16,7 @@ Threads.threadid()
 ```
 --------------------
 
-3.
+3. Run omniscape
 -----------------------------------------
 ```julia
 using Pkg; Pkg.add(["Omniscape", "Rasters", "Plots"]) #Install_library
@@ -28,9 +28,4 @@ cd("C:/Users/Eiser/Downloads") #change_directory_to_.ini_file
 run_omniscape("C:/Users/Eiser/Downloads/gas_bismillah3.ini") #Run_.ini_file
 ```
 --------------------------------------------
-
-d:
-cd "D:/Julia-1.6.3/bin"
-
-
 
