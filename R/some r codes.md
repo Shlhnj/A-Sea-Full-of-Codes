@@ -1,0 +1,129 @@
+### Calculating Current Magnitude and Direction in R
+Asumsi:  
+Data yang digunakan berformat tif, dan format nama file tifnya "u/v_angka bulan.tif" contoh "u_12.tif","v_3.tif".  
+Dalam menghitung arah dan magnitude harus ada komponen U dan V.   
+  
+  
+
+``` R
+library(raster)
+
+# Set the path to the directory containing u and v TIF files
+u_directory <- "D:/tes u v/u"
+v_directory <- "D:/tes u v/v"
+
+# Create empty lists to store monthly magnitude and direction
+monthly_magnitude_list <- list()
+monthly_direction_list <- list()
+
+# Loop over the months
+for (month in 1:96) {
+  # Read u and v files for the current month
+  u_file <- paste0(u_directory, "/u_", month, ".tif")
+  v_file <- paste0(v_directory, "/v__", month, ".tif")
+  u_raster <- raster(u_file)
+  v_raster <- raster(v_file)
+  
+  # Calculate magnitude for the current month
+  magnitude <- sqrt(u_raster^2 + v_raster^2)
+  
+  # Calculate direction for the current month
+  direction <- atan2(v_raster, u_raster)
+  
+  # Store monthly magnitude and direction
+  monthly_magnitude_list[[month]] <- magnitude
+  monthly_direction_list[[month]] <- direction
+}
+
+# Save monthly magnitude and direction to new TIF files
+for (month in 1:96) {
+  # Get the year and month for the current file
+  year <- 2008 + (month - 1) %/% 12
+  month_number <- (month - 1) %% 12 + 1
+  
+  # Create a formatted string for the month
+  month_string <- sprintf("%02d", month_number)
+  
+  # Construct the output file names
+  magnitude_file <- paste0("D:/tes u v/magnitude_", year, month_string, ".tif")
+  direction_file <- paste0("D:/tes u v/direction_", year, month_string, ".tif")
+  
+  # Write monthly magnitude and direction to new TIF files
+  writeRaster(monthly_magnitude_list[[month]], magnitude_file, format = "GTiff", overwrite = TRUE)
+  writeRaster(monthly_direction_list[[month]], direction_file, format = "GTiff", overwrite = TRUE)
+}
+
+```
+
+
+    
+---  
+
+
+  
+### Calculating Mean, Standard Deviation, Clip, Resample, Change Extent, and Convert to ASC of Tif files in R  
+Asumsi:  
+Working directory telah berada pada folder yang sesuai.  
+Semua file pada folder tersebut akan diolah/digunakan.  
+
+``` R
+# Get a list of all the .tif files in the folder
+files <- list.files(pattern = ".tif$")
+ 
+# Create a RasterStack object containing all the raster files
+stack <- stack(files)
+ 
+# Calculate the mean of all the raster layers in the stack
+mean_raster <- calc(stack, mean)
+ 
+# Calculate the standard deviation of all the raster layers in the stack
+sd_raster <- calc(stack, sd)
+ 
+# Save the mean raster as a new .tif file
+writeRaster(mean_raster, filename = "MLD_DJF_m_big.tif", format = "GTiff", overwrite = TRUE)
+ 
+# Save the standard deviation raster as a new .tif file
+writeRaster(sd_raster, filename = "MLD_DJF_sd_big.tif", format = "GTiff", overwrite = TRUE)
+ 
+# Clip mean and standard deviation raster
+clip_mean<-crop(mean_raster, ref_raster)
+clip_sd<-crop(sd_raster, ref_raster)
+ 
+# Resample and change extent of mean & sd
+m_resampled <- projectRaster(clip_mean, ref_raster, method = "bilinear")
+sd_resampled <- projectRaster(clip_sd, ref_raster, method = "bilinear")
+ 
+# Convert m & sd to asc
+writeRaster(m_resampled, filename="MLD_DJF_m.asc", format = "ascii", prj="true", overwrite = TRUE)
+writeRaster(sd_resampled, filename="MLD_DJF_sd.asc", format = "ascii", prj="true", overwrite = TRUE)
+```
+
+
+
+---  
+
+  
+### Conversion of NetCDF to Tif
+
+  
+```R
+library(raster)
+
+# set the directory where the netCDF files are stored
+setwd("path/to/folder/with/netcdf/files")
+
+# list all netCDF files in the directory
+nc_files <- list.files(pattern = "\\.nc$")
+
+# loop over the netCDF files and convert each one to GeoTIFF
+for (i in 1:length(nc_files)) {
+  # read in the netCDF file
+  nc_raster <- raster(nc_files[i])
+  
+  # define the output filename for the GeoTIFF file
+  out_file <- paste0(gsub(".nc", "", nc_files[i]), ".tif")
+  
+  # write the raster to a GeoTIFF file
+  writeRaster(nc_raster, filename = out_file, format = "GTiff")
+}
+```
